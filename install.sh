@@ -239,7 +239,10 @@ systemctl enable --now taktic-deploy.timer
 log "Compte administrateur de test"
 ADMIN_FILE="/root/sandbox-admin.txt"
 if [ ! -f "$ADMIN_FILE" ]; then
-  for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8000/api/auth/token -X POST -H 'content-type: application/json' -d '{}' 2>/dev/null; code=$?; [ $code -ne 7 ] && break; sleep 2; done
+  for i in $(seq 1 30); do
+    code="$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8000/api/auth/token -H 'content-type: application/json' -d '{}' || true)"
+    [ "$code" != "000" ] && break; sleep 2
+  done
   ADMIN_PASS="$(openssl rand -hex 10)"
   curl -fsS -X POST http://127.0.0.1:8000/api/auth/register -H 'content-type: application/json' \
     -d "{\"first_name\":\"Admin\",\"last_name\":\"Sandbox\",\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASS\"}" >/dev/null
