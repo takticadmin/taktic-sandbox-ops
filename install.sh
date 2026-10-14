@@ -86,7 +86,9 @@ Host github.com
   IdentitiesOnly yes
 EOF
 
-until sudo -u "$APP_USER" git ls-remote "$REPO_SSH" >/dev/null 2>&1; do
+chmod 700 "/home/$APP_USER/.ssh"
+chmod 600 "/home/$APP_USER/.ssh/config" "$KEY"
+until ERR="$(cd /tmp && sudo -u "$APP_USER" -H git ls-remote "$REPO_SSH" 2>&1 >/dev/null)"; do
   clear
   echo "=================================================================="
   echo " CLE PUBLIQUE A AJOUTER (lecture seule) DANS LE DEPOT SANDBOX :"
@@ -94,6 +96,8 @@ until sudo -u "$APP_USER" git ls-remote "$REPO_SSH" >/dev/null 2>&1; do
   cat "$KEY.pub"
   echo "=================================================================="
   echo " En attente de l'accès au dépôt... (nouvel essai toutes les 15 s)"
+  echo " Dernière réponse de GitHub :"
+  echo "$ERR" | tail -n 3
   sleep 15
 done
 log "Accès au dépôt OK"
